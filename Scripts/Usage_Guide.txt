@@ -1,0 +1,15 @@
+The usage of InFluence is as follows:
+
+Installation:
+
+1. Download the params.py, common_functions.py, InFluence.py and plot_trajectories.py and requirements.txt files 
+2. Set up a virtual environment using the requirements.txt file. 
+
+Running the scripts:
+The only file that ever needs to heavily modified is the params.py file. Minor changes can be made to the other scripts, but are largely unnecessary. 
+1. Edit the params.py file to suit your experiment (i.e. change beam energies, counting threshold, material properties). Add the path to the unmodulated image that you wish to modulate.
+2. Modulate the image by running InFluence.py. Parallel mode can be enabled by setting parallel = True in the jit decorator. Set parallel = False to disable parallel mode. 
+3. Run plot_trajectories.py to visualise the trajectories of the electrons and to generate a distribution of their final positions. Changes to the aesthetics of the plot can be made if desired.
+Note that InFluence.py and plot_trajectories.py both use the same params.py file, so caution should be taken when using the plot_trajectories.py as Matplotlib can only handle a few thousand trajectories.
+Of course, this can be avoided if you make a separate params.py file for each script, but the imports at the top of each script must be adjusted if this is done.
+
