@@ -10,6 +10,6 @@ Usage of the scripts is given in the Usage_Guide.txt document. Example unmodulat
 
 Note that these scripts will be refactored in the future to be more modular for easy integration with other simulation packages, so usage will change.
 
-InFluence: An Open-Source Python Package to Model Images Captured with Direct Electron Detectors
+InFluence: An Open-Source Python Package to Model Images Captured with Direct Electron Detectors, 
 Microscopy and Microanalysis, Volume 29, Issue 4, August 2023, Pages 1380–1401,
 https://doi.org/10.1093/micmic/ozad064
