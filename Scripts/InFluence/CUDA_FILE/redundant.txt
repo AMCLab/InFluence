@@ -1,0 +1,40 @@
+#ifndef GPU_HELPERS_CUH
+#define GPU_HELPERS_CUH
+
+#include <vector>  // Include the necessary header for std::vector
+#include <cuda_runtime.h>  // Include CUDA header
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+__device__ int custom_round_down(double x, int decimals);
+
+__device__ double evaluate_alpha(double E, double AlphaMultiplier);
+
+__device__ double evaluate_path_length(double CrossSection, double PathLengthMultiplier);
+
+__device__ float evaluate_cross_section_opt(float E, float CrossSectionLogArgMultiplier, float CrossSectionNumorator, float CrossSectionDenominatorA, float CrossSectionDenominatorB);
+
+__device__ double evaluate_step(double path_length, double RandomStep);
+
+__device__ double evaluate_phi(double RandomNum, double alpha);
+
+__device__ double evaluate_pho(double RandomNum, double pi);
+
+__device__ double evaluate_direction_cosine_a(double phi, double psi, double cosineY, double cosineZ);
+
+__device__ double evaluate_direction_cosine_c(double phi, double psi, double cosineZ);
+
+__device__ double evaluate_energy_loss_rate(double E, double EnergyLossMultiplierA, double EnergyLossMultiplier);
+
+__device__ double get_random_uniform(double a, double b);
+
+__device__ std::vector<double> initialize_positions(double step, double ProbeDiameter);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // GPU_HELPERS_CUH
