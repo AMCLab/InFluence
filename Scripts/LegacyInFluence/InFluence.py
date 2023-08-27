@@ -11,7 +11,7 @@ from numba_progress import ProgressBar
 
 
 #Main function
-#@jit(nopython = True, parallel =True)
+@jit(nopython = True, parallel =True)
 def MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p, pixel_dimensions, pixel_information, perfect_image):
     # counters
     number_transmitted = 0
@@ -19,11 +19,11 @@ def MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p
     number_stopped = 0
     number_eh_pairs = 0
     new_image_MCS = np.zeros((perfect_image.shape[0], perfect_image.shape[1]), dtype=np.float64)
-    for pixel_counter in range(len(pixel_information)):
+    for pixel_counter in prange(len(pixel_information)):
             number_of_electrons = int(pixel_information[pixel_counter][0])
             i_coordinate = int(pixel_information[pixel_counter][1])
             j_coordinate = int(pixel_information[pixel_counter][2])
-            for _ in range(1, number_of_electrons + 1):
+            for _ in prange(1, number_of_electrons + 1):
                 eh_charge_counter = np.zeros((perfect_image.shape[0], perfect_image.shape[1]), dtype = np.float64)
                 # initial conditions
                 alpha = evaluate_alpha(E_i, Z)
@@ -62,7 +62,6 @@ def MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p
                     cx = ca  # reset direction cosines
                     cy = cb
                     cz = cc
-
                     if E <= minimum_energy: #if electron stops in the material
                         number_stopped = number_stopped + 1
                         condition = False
@@ -75,10 +74,12 @@ def MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p
                         condition = False
                     if -1*dE >= dE_threshold: #if electron deposits sufficient energyo
                         new_eh_pairs = math.floor(-1*dE/dE_threshold)
+                        
                         number_eh_pairs = int(number_eh_pairs + new_eh_pairs)
-###########################################################################################################################
-                        if (x0 <= 1*pixel_dimensions[0]) and (x0 >= -1*pixel_dimensions[0]) and (y0 <= 1*pixel_dimensions[
-                            1])and (y0 >=-1*pixel_dimensions[1]): #electron stays within pixel region
+
+                        ##########
+
+                        if (x0 <= 1*pixel_dimensions[0]) and (x0 >= -1*pixel_dimensions[0]) and (y0 <= 1*pixel_dimensions[1])and (y0 >=-1*pixel_dimensions[1]): #electron stays within pixel region
 
                             eh_charge_counter[i_coordinate, j_coordinate] = new_eh_pairs + eh_charge_counter[i_coordinate, j_coordinate]
 
@@ -90,7 +91,6 @@ def MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p
                                     translation_y <= perfect_image.shape[0] - 1:
                                     eh_charge_counter[i_coordinate + translation_x, j_coordinate + translation_y] = new_eh_pairs + eh_charge_counter[i_coordinate +translation_x,j_coordinate +translation_y]
 
-###########################################################################################################################
 
                         elif (x0 < -1*pixel_dimensions[0]) and (y0 < -1*pixel_dimensions[1]): #electron moves negatively in x
                             # and y
@@ -116,7 +116,7 @@ def MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p
                             if i_coordinate - translation_x >= 0 and j_coordinate + \
                                     translation_y <= perfect_image.shape[0] - 1:
                                     eh_charge_counter[i_coordinate - translation_x, j_coordinate + translation_y] = new_eh_pairs + eh_charge_counter[i_coordinate -translation_x,j_coordinate +translation_y]
-#############################################################################################################
+
                         elif x0 > (1*pixel_dimensions[0]): #electron moves in positive x direction
                             translation_x = round_half_down(x=x0 / (2 * pixel_dimensions[0]))
                             if i_coordinate + \
@@ -144,11 +144,13 @@ def MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p
 
                                     eh_charge_counter[i_coordinate, j_coordinate - translation_y] = new_eh_pairs + eh_charge_counter[i_coordinate,j_coordinate -translation_y]
 
+                
                 eh_charge_counter = (np.floor(dE_threshold*eh_charge_counter/t_counting))
+                
                 new_image_MCS += eh_charge_counter #+ new_image_MCS
     return new_image_MCS
 
-
+start = time.time()
 #image
 if path_to_image.endswith('.dat'): #opens Dr Probe image
     perfect_image = opendatfile(image = path_to_image)
@@ -160,8 +162,6 @@ else: #opens most standard files
     perfect_image = np.load(path_to_image)#io.imread(path_to_image)##
 #perfect_image = np.ones((256,256))
 chosen_pixels = find_distribution(perfect_image, dose)
-
-print(chosen_pixels)
 perfect_image = num_samples*distribute_electrons(perfect_image, chosen_pixels)
 #output image
 with open(path_to_unmodulated_image, 'wb') as f:#############
@@ -169,16 +169,10 @@ with open(path_to_unmodulated_image, 'wb') as f:#############
 
 
 pixel_information = get_pixel_info(image = perfect_image)
-
-
-
 pixel_information, _ = make_2D_array(pixel_information)
-
 print('\nInFluence is running...')
 
 
-
-start = time.time()
 modulated_image = np.uint32(MCS_ChargeCounting(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p, pixel_dimensions,pixel_information, perfect_image))
 print('\nInFluence has generated the modulated image, saved to: ', path_to_modulated_image, '\n\nRun time: ', time.time() - start)
 
@@ -187,33 +181,11 @@ with open(path_to_modulated_image, 'wb') as f:
     np.save(f, modulated_image/num_samples)
  
 
-plt.imshow(modulated_image/num_samples)  # 'gray' colormap for grayscale images, omit for RGB
-plt.axis('off')  # Turn off axes and ticks for better visualization (optional)
-plt.show()
 
 
-output_file = 'legacy.png'
+plt.imshow(np.uint32(modulated_image))
+plt.axis('off')
+plt.show() 
+
+output_file = 'TODAY'
 plt.savefig(output_file)
-
-
-non_zero_values = perfect_image [perfect_image  != 0]
-
-# Print the non-zero values
-print(non_zero_values)
-
-# Add code to perform other tasks as needed (e.g., plot trajectories, save modulated image)
-
-
-print(E_i, minimum_energy, t_counting, dE_threshold, N, Z, A, p, pixel_dimensions)
-
-
-
-
-print(f"E_i: {E_i}")
-print(f"dE_threshold: {dE_threshold}")
-print(f"MinimumEnergy: {minimum_energy}")
-print(f"ProtonNum: {Z}")
-print(f"AtomicMass: {A}")
-print(f"Density: {p}")
-print(f"t_counting: {t_counting}")
-print(f"N: {N}")

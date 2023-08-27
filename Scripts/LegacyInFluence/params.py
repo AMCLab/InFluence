@@ -14,10 +14,10 @@ Z = 14 #number of protons
 A = 28.1 #atomic weight in Daltons
 p = 2.33 #density of material in g/cm cubed
 dE_threshold = 0.00362 #eh pair generation of material in keV
-pixel_dimensions = List(np.around([27.5*10**-4, 27.5*10**-4, 10**-2 + 300*10**-4], decimals=6)) # [x, y, 10**-2 + z] in cm -change, x, y, z only
+pixel_dimensions = (np.around([27.5*10**-4, 27.5*10**-4, 10**-2 + 300*10**-4], decimals=6)) # [x, y, 10**-2 + z] in cm -change, x, y, z only
 
 #Choose electron dose
-dose = 10000 #choose dose in number of electrons
+dose = 1000000 #choose dose in number of electrons
 
 #Output file type
 ext = '.png'
