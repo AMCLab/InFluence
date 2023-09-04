@@ -1,6 +1,6 @@
 import configparser
 
-class params:
+class SimulationParameters:
     
     config = configparser.ConfigParser()
     config.read('config.ini')

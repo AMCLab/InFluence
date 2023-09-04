@@ -1,7 +1,7 @@
 import configparser
 
 
-class filepaths:
+class Filepaths:
     config = configparser.ConfigParser()
     config.read('config.ini')
 

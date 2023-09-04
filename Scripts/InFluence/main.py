@@ -1,12 +1,15 @@
-import argparse
-from InFluenceSimulation import InFluenceSimulation
-from ImageObjectConstructor import image_pixels
+
+from simulation.simulation_interface import InFluenceSimulation 
+
+from image_preprocessing.image_object_constructor import image_pixels
 
 from matplotlib import pyplot as plt
 import numpy as np
 
-from filepaths import *
-from InFluenceSimulation import *
+from parameters import SimulationParameters as params
+
+from filepaths import Filepaths as filepaths
+
 
 import itertools
 import sys
@@ -38,8 +41,12 @@ def RunSimulation(simulation_type):
     # Start the twinkling stars spinner
     #spinner_process = multiprocessing.Process(target=twinkling_stars_spinner)
     #spinner_process.start()
-    image_object = image_pixels(filepaths.InputImageLocation)
-    influence_simulator = InFluenceSimulation(image_object)
+
+
+
+
+    image_object = image_pixels(filepaths.InputImageLocation, params)
+    influence_simulator = InFluenceSimulation(image_object, params)
 
     print('Dose is:     ', params.dose )
     print('Simulation starting...')
