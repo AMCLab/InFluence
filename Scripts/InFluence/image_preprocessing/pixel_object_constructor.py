@@ -18,6 +18,7 @@ pixel_spec = [
 class pixel_constructor:
     
     def __init__(self, electron_count, i, j, x_dimension, y_dimension, z_dimension):
+        #Update class variables
         self.electron_count = int(electron_count)
         self.i = int(i)
         self.j = int(j)

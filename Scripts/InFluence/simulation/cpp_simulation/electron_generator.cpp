@@ -2,7 +2,14 @@
 #include "helper_functions.h" // Include any necessary custom functions
 #include "constants.h"
 
-std::vector<std::vector<double>> generate_electrons(int electron_count, double E_i, double ProbeDiameter) {
+std::vector<std::vector<double>> generate_electrons(int electron_count, double E_i, double ProbeDiameter, double AlphaMultiplier,
+    double CrossSectionNumorator,
+    double CrossSectionLogArgMultiplier,
+    double CrossSectionDenominatorA,
+    double CrossSectionDenominatorB,
+    double PathLengthMultiplier,
+    double EnergyLossMultiplierA,
+    double EnergyLossMultiplierB) {
     std::vector<std::vector<double>> electrons(electron_count, std::vector<double>(16));
 
     // Pre-calculate some common values

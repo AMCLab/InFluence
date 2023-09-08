@@ -42,7 +42,14 @@ int main() {
     double t_counting = 40; // Replace with the desired value of t_counting
 
     // Call the function for each row of Pixels
-    RunMCScatteringSimulation(Pixels, E_i, ProbeDiameter, MinimumEnergy, dE_threshold, perfect_image_0, perfect_image_1, Density, t_counting);
+    RunMCScatteringSimulation(Pixels, E_i, ProbeDiameter, MinimumEnergy, dE_threshold, perfect_image_0, perfect_image_1, Density, t_counting, AlphaMultiplier,
+    CrossSectionNumorator,
+    CrossSectionLogArgMultiplier,
+    double CrossSectionDenominatorA,
+    double CrossSectionDenominatorB,
+    double PathLengthMultiplier,
+    double EnergyLossMultiplierA,
+    double EnergyLossMultiplierB);
 
     std::cout<<"Simulation complete."<<std::endl;
 

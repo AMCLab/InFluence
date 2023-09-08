@@ -1,0 +1,30 @@
+***********************************************    User Guide     ***********************************************
+Open the application and navigate to the main window.
+*Main Window
+    Simulation Type: Choose the type of simulation from "PySparse", "PyDense", or "CPP".
+        To Update: Select a type from the dropdown and press Enter.
+    Counting Threshold: Set the counting threshold.
+        To Update: Either manually input a value and press Enter or use the scale.
+    Electron Energy: Set the electron energy.
+        To Update: Either manually input a value and press Enter or use the scale.
+
+*Menu Bar
+    Options
+        View System Spec: Click to display system specifications.
+        Plot Trajectories: Click to plot the trajectories.
+    Detector Settings: Navigate here to change detector-related settings.
+    Help
+        User Tutorial: Click to get a tutorial.
+        View Software Documentation: Click to view software documentation.
+
+*Detector Settings Window
+    Detector Threshold: Set the threshold in keV.
+    Material Density: Set the material density in g/cm^3
+    Pixel Dimensions: Set dimensions for x, y, and z.
+    Proton Number: Set the proton number.
+    Atomic Mass: Set the atomic mass.
+    Choose an Element: Select a predefined element to autofill proton number and atomic mass.
+    To Update: Input your settings and click "Save Settings" - zFor any empty or invalid entries, an error message will display. Always remember to click "Save Settings" after making changes. 
+
+*System Specifications Window
+    This window displays information about your system, such as CPU cores and GPU.

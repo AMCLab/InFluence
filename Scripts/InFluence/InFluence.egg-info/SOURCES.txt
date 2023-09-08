@@ -1,4 +1,3 @@
-InFluence_CLI.py
 main.py
 setup.py
 InFluence.egg-info/PKG-INFO
@@ -7,3 +6,21 @@ InFluence.egg-info/dependency_links.txt
 InFluence.egg-info/entry_points.txt
 InFluence.egg-info/requires.txt
 InFluence.egg-info/top_level.txt
+interface_code/InFluence_CLI.py
+simulation/__init__.py
+simulation/simulation_interface.py
+simulation/cpp_simulation/__init__.py
+simulation/cpp_simulation/constants.py
+simulation/cpp_simulation/cpp_simulation_interface.py
+simulation/cuda_simulation/__init__.py
+simulation/cuda_simulation/constants.py
+simulation/cuda_simulation/cuda_kernel_wrapper.py
+simulation/cuda_simulation/gpu_simulation_interface.py
+simulation/python_simulation/__init__.py
+simulation/python_simulation/electron_object_constructor.py
+simulation/python_simulation/helper_functions.py
+simulation/python_simulation/mcss_python_functions.py
+simulation/python_simulation/mcss_python_functions_plot.py
+simulation/python_simulation/mcss_python_functions_sparse.py
+simulation/python_simulation/plot_trajectory_functions.py
+simulation/python_simulation/python_simulation_interface.py

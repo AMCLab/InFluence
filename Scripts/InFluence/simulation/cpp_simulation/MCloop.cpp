@@ -7,13 +7,18 @@
 
 #include "MCloop.h"
 #include "helper_functions.h"
-#include "electrons_generator.h"
-#include "constants.h"
 #include <Eigen/Sparse>
 #include <omp.h>
 
 std::vector<std::vector<double>> RunMCScatteringSimulation(const std::vector<std::vector<double>>& pixels, double E_i, double ProbeDiameter, double MinimumEnergy,
-                              double dE_threshold, int perfect_image_0, int perfect_image_1, double Density, double t_counting) {
+                              double dE_threshold, int perfect_image_0, int perfect_image_1, double Density, double t_counting, double AlphaMultiplier,
+    double CrossSectionNumorator,
+    double CrossSectionLogArgMultiplier,
+    double CrossSectionDenominatorA,
+    double CrossSectionDenominatorB,
+    double PathLengthMultiplier,
+    double EnergyLossMultiplierA,
+    double EnergyLossMultiplierB) {
 
     // Initialize 2D arrays as vectors of vectors
 
@@ -39,9 +44,6 @@ std::vector<std::vector<double>> RunMCScatteringSimulation(const std::vector<std
         double y_dimension = pixel[4];
         double z_dimension = pixel[5];
 
-        //std::cout<<count<<std::endl;
-
-        //std::cout<<'Pixel count is  ' << pixel_counter<<std::endl;
 
 
         if (count == 0) {
@@ -51,7 +53,6 @@ std::vector<std::vector<double>> RunMCScatteringSimulation(const std::vector<std
 
         else{
 
-        std::cout<<i_coordinate<<std::endl;
 
 
         for (int i = 0; i < count; ++i) {
@@ -84,7 +85,7 @@ std::vector<std::vector<double>> RunMCScatteringSimulation(const std::vector<std
             
             pixel_counter +=1;
             
-            //std::cout<<'Electron within pixel  ' << electron_per_pixel<<std::endl;
+
 
 
             while (condition == true) {
@@ -107,7 +108,7 @@ std::vector<std::vector<double>> RunMCScatteringSimulation(const std::vector<std
 
                 // Calculate scattering angles and direction cosines
                 double phi = evaluate_phi(RND_phi, alpha);
-                double psi = evaluate_pho(RND_pho, pi); 
+                double psi = evaluate_pho(RND_pho, M_PI); 
 
                 double ca = evaluate_direction_cosine_a(phi, psi, cosineY, cosineZ);
                 double cb = evaluate_direction_cosine_b(phi, psi, cosineX, cosineY, cosineZ);

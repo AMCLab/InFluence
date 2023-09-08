@@ -1,104 +1,83 @@
 
-from simulation.simulation_interface import InFluenceSimulation 
-
-from image_preprocessing.image_object_constructor import image_pixels
-
-from matplotlib import pyplot as plt
-import numpy as np
-
-from parameters import SimulationParameters as params
-
-from filepaths import Filepaths as filepaths
-
-
 import itertools
 import sys
 import time
 
+from matplotlib import pyplot as plt
+import numpy as np
 
-def twinkling_stars_spinner():
-    emojis = ['✨', '  ']  # Customize the emojis as you like
-    spinner_characters = itertools.cycle(emojis)
-    while True:
-        sys.stdout.write(next(spinner_characters))  # Print the next emoji
-        sys.stdout.flush()
-        time.sleep(0.25)  # Adjust the delay (in seconds) to control the flickering speed
-        sys.stdout.write('\b\b')  # Move the cursor back to the beginning of the line
+from .filepaths import Filepaths as filepaths
+from image_preprocessing.image_object_constructor import image_pixels
+
+from simulation.simulation_interface import InFluenceSimulation 
+from parameters import SimulationParameters
 
 
-def RunSimulation(simulation_type):
-
-    print('_____________________________________________________________')
-
-    print(' ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ')
-
-    print('                   *  InFluence  *  ')
-
-    print('                                                         ')
+def RunSimulation(simulation_type, gui=False):
     
-    print('InFluence simulation will run on ' + simulation_type + '...')
-    
-    # Start the twinkling stars spinner
-    #spinner_process = multiprocessing.Process(target=twinkling_stars_spinner)
-    #spinner_process.start()
-
-
-
-
+    params = SimulationParameters()
+    params.refresh_config()
     image_object = image_pixels(filepaths.InputImageLocation, params)
     influence_simulator = InFluenceSimulation(image_object, params)
 
-    print('Dose is:     ', params.dose )
-    print('Simulation starting...')
-    
     if simulation_type =='GPU':
         SimulationResults = influence_simulator.Run_GPU_KERNEL_MCScatteringSimulation()
-    if simulation_type == "PartialVec":
-        SimulationResults = influence_simulator.RunPartiallyVectorizedMCScatteringSimulation()
-    else:
-        SimulationResults = influence_simulator.RunMCSimulation()
+    elif simulation_type == "CPP":
+        SimulationResults = influence_simulator.RunCPPMCScatteringSimulation()
+    elif simulation_type == "PySparse":
+        SimulationResults = influence_simulator.RunMCSimulation_Py("PySparse")
+    elif simulation_type == "PyDense":
+        SimulationResults = influence_simulator.RunMCSimulation_Py("PyDense")
+    elif simulation_type == "Plot":
+        SimulationResults = influence_simulator.RunMCSimulation_Py("Plot")
 
-    # Stop the twinkling stars spinner
-    #spinner_process.terminate()
 
+    if gui==True:
+        print('Simulation complete.')
+        return SimulationResults
     
-    plt.imshow(np.uint32(SimulationResults))
-    plt.axis('off')
-    plt.show() 
+    else:
+        
+                
+        plt.imshow(np.uint32(SimulationResults))
+        plt.axis('off')
+        plt.show() 
+        
 
-    output_file = filepaths.SaveLocation
-    plt.savefig(output_file)
+        output_file = filepaths.SaveLocation
+        plt.savefig(output_file)
+        
+        # Save as an image
+        plt.savefig(output_file + '.png')
 
-    print('    ...Simulation complete! ✨')
+        # Save as a .npy file
+        np.save(output_file + '.npy', SimulationResults)
 
-    print('                                                         ')
+        return
+        
 
-    print('You can view the output image at: ' + filepaths.SaveLocation )
-
-    print('                                                         ')
-
-    print(' ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ✨ ')
-    print('_____________________________________________________________')
-
-
-def profiled_run():
-    RunSimulation('CPU')
+import time  # Import the time module
 
 def main():
+    # Record the start time
     start_time = time.time()
-    
-    RunSimulation('CPU')
-    
+
+    # Run the simulation
+    RunSimulation('PySparse')
+
+    # Record the end time
     end_time = time.time()
+
+    # Calculate the elapsed time
     elapsed_time = end_time - start_time
     
-    print(f"Simulation on 'CPU' mode took {elapsed_time:.2f} seconds.")
 
-
-
+    print(f"Simulation completed in {elapsed_time:.2f} seconds.")  # Print the elapsed time
 
 
 if __name__ == "__main__":
-    main()
-
-
+    try:
+        main()
+    except ValueError as e:
+        print(e)  # Print the error message if an exception is raised
+        sys.exit(1)  # Exit the program with an error code (1 indicates an error)

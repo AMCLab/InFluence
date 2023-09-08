@@ -4,39 +4,13 @@
 
 
 
-__device__ float getRand(float a, float b)
+__device__ float getRand(float a, float b, curandState* state)
 {
-    curandState_t s;
-    unsigned long long seed = clock64() +
-                              (threadIdx.x + blockIdx.x * blockDim.x) + // using htread ids and block ids here mean the values are more random
-                              (threadIdx.y + blockIdx.y * blockDim.y) * gridDim.x +
-                              (blockDim.x * gridDim.x) * (threadIdx.z + blockIdx.z * blockDim.z);
-
-    curand_init(seed, 0, 0, &s);
-    float random_val = curand_uniform(&s); // This will return a random value between 0.0 and 1.0
-    return a + random_val * (b - a);       // This will scale the value to be between a and b
+    return a + (b - a) * curand_uniform(state);
 }
-
 
 
 extern "C" {
-
-// Define the constants here
-const double AlphaMultiplier = 0.0199243747192385;
-const double CrossSectionNumorator = 1.8667680868962075e-16;
-const double CrossSectionLogArgMultiplier = 0.23918817189962177;
-const double CrossSectionDenominatorA = 0.5184202839764088;
-const double CrossSectionDenominatorB = 0.07483314773547883;
-const double PathLengthMultiplier = 2.0026243685658836e-23;
-const double EnergyLossMultiplierA = -39110.320284697504;
-const double EnergyLossMultiplierB = 0.17207166322008674;
-
-
-__global__ void setup_random_states(curandState *state, unsigned long long seed)
-{
-    int id = threadIdx.x + blockIdx.x * blockDim.x;
-    curand_init(seed, id, 0, &state[id]);
-}
 
 
 __device__ int custom_round_down(double x, int decimals=0) {
@@ -111,10 +85,10 @@ __device__ double evaluate_energy_loss_rate(double E, double EnergyLossMultiplie
 }
 
 
-__device__ void initialize_positions(double step, double ProbeDiameter, double* position_data) {
+__device__ void initialize_positions(double step, double ProbeDiameter, double* position_data, curandState* state) {
     double z0 = 1e-2 + step;
-    double x0 = ProbeDiameter * getRand(-1.0, 1.0);
-    double y0 = ProbeDiameter * getRand(-1.0, 1.0);
+    double x0 = ProbeDiameter * getRand(-1.0, 1.0, state);
+    double y0 = ProbeDiameter * getRand(-1.0, 1.0, state);
     double vector_length = sqrtf(x0 * x0 + y0 * y0 + z0 * z0);
     double cosineX = x0 / vector_length;
     double cosineY = y0 / vector_length;
@@ -132,75 +106,6 @@ __device__ void initialize_positions(double step, double ProbeDiameter, double* 
 
 
 
-
-__device__ void process3DArray(double* d_array, int xdim, int ydim, int zdim, float dE_threshold, int t_counting) {
-    // Calculate the unique index for each thread
-    int idx_x = blockIdx.x * blockDim.x + threadIdx.x;
-    int idx_y = blockIdx.y * blockDim.y + threadIdx.y;
-    int idx_z = blockIdx.z * blockDim.z + threadIdx.z;
-
-    // Convert 3D position to 1D index
-    int idx = idx_z * (xdim * ydim) + idx_y * xdim + idx_x;
-
-    if (idx_x < xdim && idx_y < ydim && idx_z < zdim) {
-        // Multiply the value by dE_threshold, divide by t_counting and take the floor of the result
-        d_array[idx] = floorf((d_array[idx] * dE_threshold) / (float)t_counting);
-    }
-}
-
-
-__device__ void sumAcrossK(double* d_in, double* d_out, int i_dim, int j_dim, int k_dim)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    int j = blockIdx.y * blockDim.y + threadIdx.y;
-
-    if(i < i_dim && j < j_dim)
-    {
-        float sum = 0;
-        for(int k = 0; k < k_dim; k++)
-        {
-            int idx = k * i_dim * j_dim + j * i_dim + i;
-            sum += d_in[idx];
-        }
-        d_out[j * i_dim + i] = sum;
-    }
-}
-
-
-__device__ double atomicA(double* address, double val)
-{
-    unsigned long long int* address_as_ull =
-                             (unsigned long long int*)address;
-    unsigned long long int old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed,
-                        __double_as_longlong(val +
-                               __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-__global__ void initCurand(curandState* state, unsigned long seed) {
-    int id = threadIdx.x + blockIdx.x * blockDim.x;
-    curand_init(seed, id, 0, &state[id]);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-__device__ float getRand_NEW(float a, float b, curandState* state)
-{
-    return a + (b - a) * curand_uniform(state);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 __device__ void atomicAdd_double(double* address, double value) {
         unsigned long long int* address_as_ull = (unsigned long long int*)address;
         unsigned long long int old = *address_as_ull, assumed;
@@ -214,10 +119,28 @@ __device__ void atomicAdd_double(double* address, double value) {
     }
 
 
-__global__ void MCScatteringSimulationKernel(const double* pixels, int numPixels, double E_i, double ProbeDiameter,
-                                                double MinimumEnergy, double dE_threshold, int perfect_image_0,
-                                                int perfect_image_1, double Density, double t_counting,
-                                                double* new_image_MCS) {
+__global__ void MCScatteringSimulationKernel(
+    const double* pixels, 
+    int numPixels, 
+    double E_i, 
+    double ProbeDiameter,
+    double MinimumEnergy, 
+    double dE_threshold, 
+    int perfect_image_0,
+    int perfect_image_1, 
+    double Density, 
+    double t_counting,
+    double AlphaMultiplier, 
+    double CrossSectionNumorator, 
+    double CrossSectionLogArgMultiplier, 
+    double CrossSectionDenominatorA, 
+    double CrossSectionDenominatorB, 
+    double PathLengthMultiplier, 
+    double EnergyLossMultiplierA, 
+    double EnergyLossMultiplierB,
+    double* new_image_MCS) 
+                                                
+    {
     
     int threadIndex_x = blockIdx.x * blockDim.x + threadIdx.x;
     int threadIndex_y = blockIdx.y * blockDim.y + threadIdx.y;   
@@ -226,6 +149,9 @@ __global__ void MCScatteringSimulationKernel(const double* pixels, int numPixels
 
     // Convert 2D thread indices to 1D index
     int threadIndex = threadIndex_y * perfect_image_1 + threadIndex_x;
+
+    curandState state;
+    curand_init(1234, threadIndex, 0, &state); 
     
 
     // Check if the thread index is within the valid range of pixels
@@ -247,7 +173,6 @@ __global__ void MCScatteringSimulationKernel(const double* pixels, int numPixels
 
         int number_transmitted = 0;
         int number_eh_pairs = 0;
-        int new_eh_pairs = 0;
         int number_stopped  = 0;
         int number_backscattered = 0;
 
@@ -271,12 +196,12 @@ __global__ void MCScatteringSimulationKernel(const double* pixels, int numPixels
                 double alpha = evaluate_alpha(E_i, AlphaMultiplier);
                 double CrossSection = evaluate_cross_section_opt(E_i, CrossSectionLogArgMultiplier, CrossSectionNumorator, CrossSectionDenominatorA, CrossSectionDenominatorB);
                 double PathLength = evaluate_path_length(CrossSection, PathLengthMultiplier);
-                double RND_step = getRand(0.000001, 0.999999);
+                double RND_step = getRand(0.000001, 0.999999, &state);
                 double step = evaluate_step(PathLength, RND_step);  
 
                 // Initialize position data
                 double position_data[7];
-                initialize_positions(step, ProbeDiameter, position_data);
+                initialize_positions(step, ProbeDiameter, position_data, &state);
                 double cosineX = position_data[0];
                 double cosineY = position_data[1];
                 double cosineZ = position_data[2];
@@ -291,9 +216,9 @@ __global__ void MCScatteringSimulationKernel(const double* pixels, int numPixels
                 
                 
                 // Generate random numbers
-                double RND_phi = getRand(0, 1);
-                double RND_step = getRand(0.000001, 0.999999);
-                double RND_pho = getRand(0, 1);
+                double RND_phi = getRand(0, 1, &state);
+                double RND_step = getRand(0.000001, 0.999999, &state);
+                double RND_pho = getRand(0, 1, &state);
 
                 // Calculate alpha, cross section, path length, and step
                 double alpha = evaluate_alpha(E_i, AlphaMultiplier);

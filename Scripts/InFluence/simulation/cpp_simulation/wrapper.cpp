@@ -15,7 +15,15 @@ py::list runMCScatteringSimulationWrapper(
     int perfect_image_0,
     int perfect_image_1,
     double Density,
-    double t_counting
+    double t_counting,
+    double AlphaMultiplier,
+    double CrossSectionNumorator,
+    double CrossSectionLogArgMultiplier,
+    double CrossSectionDenominatorA,
+    double CrossSectionDenominatorB,
+    double PathLengthMultiplier,
+    double EnergyLossMultiplierA,
+    double EnergyLossMultiplierB
 ) {
     // Convert Python list of lists to C++ vector of vectors explicitly
     std::vector<std::vector<double>> pixels_cpp;
@@ -34,7 +42,15 @@ py::list runMCScatteringSimulationWrapper(
         perfect_image_0,
         perfect_image_1,
         Density,
-        t_counting
+        t_counting,
+        AlphaMultiplier, 
+        CrossSectionNumorator, 
+        CrossSectionLogArgMultiplier, 
+        CrossSectionDenominatorA, 
+        CrossSectionDenominatorB, 
+        PathLengthMultiplier, 
+        EnergyLossMultiplierA, 
+        EnergyLossMultiplierB
     );
 
     // Convert the result back to a Python list of lists
